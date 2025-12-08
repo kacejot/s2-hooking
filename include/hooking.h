@@ -62,6 +62,11 @@ public:
 		return install(hi);
 	}
 
+	bool has_hook(function_id id) const
+	{
+		return m_hooks.find(id) != m_hooks.end();
+	}
+
 private:
 	void deinit();
 	hooking_result install(hook_info& hi);
