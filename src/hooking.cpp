@@ -1,41 +1,22 @@
 #include "hooking.h"
 #include "MinHook.h"
 
-std::string to_string(hooking_result result)
-{
-	switch (result)
-	{
-	case hooking_result::SUCCESS:
-		return "success";
-	case hooking_result::MINHOOK_INIT_FAILED:
-		return "MinHook initialization failed";
-	case hooking_result::CREATE_HOOK_FAILED:
-		return "failed to create hook";
-	case hooking_result::ENABLE_HOOK_FAILED:
-		return "failed to enable hook";
-	default:
-		return "unknown error";
-	}
-}
-
-hooking::~hooking()
-{
+hooking::~hooking() {
     if (m_initialized)
         deinit();
 }
 
-hooking_result hooking::init()
-{
-    if (MH_OK != MH_Initialize())
-        return hooking_result::MINHOOK_INIT_FAILED;
+MH_STATUS hooking::init() {
+    MH_STATUS result = MH_OK;
+    if (!m_initialized) {
+        if (result = MH_Initialize(); MH_OK == result)
+            m_initialized = true;
+    }
 
-	m_initialized = true;
-
-    return hooking_result::SUCCESS;
+    return result;
 }
 
-void hooking::deinit()
-{
+void hooking::deinit() {
     for (auto& [_, hi] : m_hooks) {
         if (hi.address)
             MH_DisableHook((LPVOID)hi.address);
@@ -44,16 +25,16 @@ void hooking::deinit()
     }
 
     MH_Uninitialize();
-	m_initialized = false;
+    m_initialized = false;
 }
 
-hooking_result hooking::install(hook_info& hi)
-{
-    if (MH_OK != MH_CreateHook((LPVOID)hi.address, (LPVOID)hi.detour, (LPVOID*)&hi.original))
-        return hooking_result::CREATE_HOOK_FAILED;
+MH_STATUS hooking::install(hook_info& hi) {
+    MH_STATUS result = MH_OK;
+    if (result = MH_CreateHook((LPVOID)hi.address, (LPVOID)hi.detour, (LPVOID*)&hi.original);  MH_OK != result)
+        return result;
 
-    if (MH_OK != MH_EnableHook((LPVOID)hi.address))
-        return hooking_result::ENABLE_HOOK_FAILED;
+    if (result = MH_EnableHook((LPVOID)hi.address); MH_OK != result)
+        return result;
 
-    return hooking_result::SUCCESS;
+    return result;
 }
